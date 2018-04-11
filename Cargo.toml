@@ -1,0 +1,7 @@
+[package]
+name = "xmltest"
+version = "0.1.0"
+authors = ["Luis Diego Fallas <ldfallas@example.com>"]
+
+[dependencies]
+xml-rs = "0.7"
