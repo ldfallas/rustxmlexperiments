@@ -16,6 +16,7 @@ impl SvgRectSource {
     fn new(file_name: &String) -> SvgRectSource {
         let file =
             File::open(file_name).expect("Cannot open input file");
+        
         let buf_file =
             BufReader::new(file);
 
@@ -37,27 +38,30 @@ struct Rect {
 impl Iterator for SvgRectSource {
     type Item = Rect;
     fn next(&mut self) -> Option<Rect> {
-        //        for e in self.reader {
-        //for e in r {
-        println!("<>?<?");
-        if let Err(err) = self.reader.next() {
-            println!("e {}" , err);
-        }
         while let Ok(e) = self.reader.next() {
             match e {
                 XmlEvent::StartElement { name, attributes, ..}  => {
-                    println!("++ {}", name.local_name);
                     if name.local_name == "rect" {
                         let mut x : f64 = 0.0;
-                        let y : f64 = 0.0;
-                        let w : f64  = 0.0;
-                        let h : f64 = 0.0;
+                        let mut y : f64 = 0.0;
+                        let mut w : f64  = 0.0;
+                        let mut h : f64 = 0.0;
                         for att in attributes.iter() {
                             match (att.name.local_name.as_str(),
                                    f64::from_str(att.value.as_str())) {
                                 ("x", Ok(x_value))  =>  {
                                     x = x_value
                                 }
+                                ("y", Ok(y_value))  =>  {
+                                    y = y_value
+                                }
+                                ("width", Ok(w_value))  =>  {
+                                    w = w_value
+                                }
+                                ("height", Ok(h_value))  =>  {
+                                    h = h_value
+                                }                                
+                                
                                 (_, _) => { }
                             }
                         }
@@ -67,9 +71,7 @@ impl Iterator for SvgRectSource {
                             w: w,
                             h: h
                         });
-                    } else {
-                        return None;
-                    }
+                    } 
                 }
                 XmlEvent::StartDocument {..} => {
                     
@@ -77,8 +79,12 @@ impl Iterator for SvgRectSource {
                 XmlEvent::EndDocument {..}  => {
                     return None;
                 }
+                // Just ignore these
+                XmlEvent::Whitespace {..} => {}
+                XmlEvent::Comment {..} => {}
+                XmlEvent::Characters {..} => {}
+                XmlEvent::EndElement {..} => {}
                 _ => {
-                    println!(">>>>");
                     return None;
                 }
             }
@@ -99,27 +105,8 @@ fn main() {
 
     let source = SvgRectSource::new(&args[1]);
 
+    println!("Rectangles:");
     for e in source {
-        println!("-- {}", e.x);
+        println!("\t ({}, {}) - ({}, {})", e.x, e.y, e.w, e.h);
     }
-
-    // let file =
-    //     File::open(&args[1]).expect("Cannot open input file");
-    // let buf_file =
-    //     BufReader::new(file);
-
-    // let parser = EventReader::new(buf_file);
-    // for e in parser {
-    //     match e {
-    //         Ok(XmlEvent::StartElement { name, ..}) => {
-    //             println!("\t Element name: {}", name);
-    //         }
-    //         Ok(_) => {
-    //             println!("Other kind of element");
-    //         }
-    //         Err(err)  =>{
-    //             println!("Unexpected {}", err);
-    //         }
-    //     }
-    // }
 }
